@@ -139,3 +139,7 @@ a {
     text-decoration: none !important;
     color: white !important;
 }
+
+.form-label{
+    font-weight: bold;
+}
