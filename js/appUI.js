@@ -1,6 +1,11 @@
 //<span class="cmdIcon fa-solid fa-ellipsis-vertical"></span>
 let contentScrollPosition = 0;
+let selectedCategory = null;
 Init_UI();
+
+$('.dropdown-menu').click(function(e) {
+    e.stopPropagation();
+});
 
 function Init_UI() {
     renderBookmarks();
@@ -45,12 +50,26 @@ async function renderBookmarks() {
     $("#createBookmark").show();
     $("#abort").hide();
     let bookmarks = await Bookmarks_API.Get();
+    let categories = []
     eraseContent();
+
+    
     if (bookmarks !== null) {
         bookmarks.forEach(bookmark => {
-            $("#content").append(renderBookmark(bookmark));
+            if(selectedCategory == null)
+                $("#content").append(renderBookmark(bookmark));
+
+            else if(bookmark.Category == selectedCategory){
+                $("#content").append(renderBookmark(bookmark));
+            }
+            //adding categories
+            if(!categories.includes(bookmark.Category))
+                categories.push(bookmark.Category)
         });
         restoreContentScrollPosition();
+        renderDropDownMenu(categories)
+        
+
         // Attached click events on command icons
         $(".editCmd").on("click", function () {
             saveContentScrollPosition();
@@ -60,10 +79,13 @@ async function renderBookmarks() {
             saveContentScrollPosition();
             renderDeleteBookmarkForm(parseInt($(this).attr("deleteBookmarkId")));
         });
-        $(".bookmarkRow").on("click", function (e) { e.preventDefault(); })
+        $(".bookmarkRow").on("click", function () { 
+            window.location = $(this).find("#bookmarkUrl").val()
+        })    
     } else {
         renderError("Service introuvable");
     }
+    
 }
 function showWaitingGif() {
     $("#content").empty();
@@ -109,17 +131,19 @@ async function renderDeleteBookmarkForm(id) {
     if (bookmark !== null) {
         $("#content").append(`
         <div class="bookmarkdeleteForm">
-            <h4>Effacer le favoris suivant?</h4>
+            <h4>Effacer le favori suivant?</h4>
             <br>
             <div class="bookmarkRow" bookmark_id=${bookmark.Id}">
-                <div class="bookmarkContainer">
-                    <div class="bookmarkLayout">
-                        <div class="bookmarkIcon">${bookmark.Url}</div>
-                        <div class="bookmarkName">${bookmark.Title}</div>
-                        <div class="bookmarkCategory">${bookmark.Category}</div>
-                    </div>
-                </div>  
-            </div>   
+        <div class="bookmarkContainer">
+            <div class="bookmarkLayout">
+                <div class="bookmarkHeader">
+                    <img src="https://www.google.com/s2/favicons?domain=${bookmark.Url}&sz=32">
+                    <span class="bookmarkTitle">${bookmark.Title}</span>
+                </div>
+                <span class="bookmarkCategory">${bookmark.Category}</span>
+            </div>
+        </div>
+    </div>        
             <br>
             <input type="button" value="Effacer" id="deleteBookmark" class="btn btn-primary">
             <input type="button" value="Annuler" id="cancel" class="btn btn-secondary">
@@ -213,12 +237,10 @@ function renderBookmarkForm(bookmark = null) {
         renderBookmarks();
     });
     $('#Url').on("change", () => {
-        let site = $("#Url").text
-        $.ajax({
-            url: "https://www.google.com/s2/favicons?domain=" + site + "&sz=256",
-            type: "GET",
-            success: (value) => console.log(value)
-        })
+        let site = $("#Url").val();
+        if (site != '')
+            $("#bookmarkIcon").attr("src", `https://www.google.com/s2/favicons?domain=${site}&sz=64`);
+        else $("#bookmarkIcon").attr("src", "bookmark-logo.svg")
     })
 }
 
@@ -234,10 +256,13 @@ function getFormData($form) {
 function renderBookmark(bookmark) {
     return $(`
      <div class="bookmarkRow" bookmark_id=${bookmark.Id}">
+     <input type="hidden" value="${bookmark.Url}" id="bookmarkUrl">
         <div class="bookmarkContainer noselect">
             <div class="bookmarkLayout">
-                <span class="bookmarkTitle">${bookmark.Title}</span>
-                <span class="bookmarkUrl">${bookmark.Url}</span>
+                <div class="bookmarkHeader">
+                    <img src="https://www.google.com/s2/favicons?domain=${bookmark.Url}&sz=32">
+                    <span class="bookmarkTitle">${bookmark.Title}</span>
+                </div>
                 <span class="bookmarkCategory">${bookmark.Category}</span>
             </div>
             <div class="bookmarkCommandPanel">
@@ -247,4 +272,42 @@ function renderBookmark(bookmark) {
         </div>
     </div>           
     `);
+}
+
+
+function renderDropDownMenu(categories){
+    $(".dropdown-menu").empty()
+    $(".dropdown-menu").append(`<div class="dropdown-item dropdown-category" id="loginCmd">
+        ${selectedCategory == null ? '<i class="fa fa-check" style="color:rgb(0, 87, 204);"></i> ' : ''}Toutes les catégories
+        </div>
+    <div class="dropdown-divider"></div>`)
+
+    categories.forEach(category => {
+        $(".dropdown-menu").append(`<div class="dropdown-item dropdown-category" id="${category}">
+        ${category == selectedCategory ? '<i class="fa fa-check" style="color:rgb(0, 87, 204);"></i> ' + category : category} 
+    </div>`)
+    });
+    
+    if(categories.length > 0){
+        $(".dropdown-item:last").after('<div class="dropdown-divider"></div>')
+    }
+
+    $('.dropdown-menu').append(`<div class="dropdown-item" id="aboutCmd">
+                        <i class="menuIcon fa fa-info-circle mx-2"></i> À propos...
+                    </div>`)
+
+    $('.dropdown-category').on("click",function() {
+        $('.dropdown-category i.fa-check').remove();
+        $(this).prepend('<i class="fa fa-check" style="color:rgb(0, 87, 204);"></i>')
+        selectedCategory = $(this).text().trim()
+        
+        if (selectedCategory == "Toutes les catégories")
+            selectedCategory = null
+        
+        renderBookmarks()
+    })
+    $('#aboutCmd').on("click", function () {
+        renderAbout();
+        $(".dropdown").click()
+    });
 }

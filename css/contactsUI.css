@@ -9,7 +9,7 @@
     display: grid;
     grid-template-columns: 4fr 1fr;
     align-items: top;
-    background-color: rgb(87, 140, 255);
+    background-color: lightgrey;
     border-radius: 6px;
 }
 
@@ -35,15 +35,16 @@
 .bookmarkTitle {
     font-size: 1.1rem;
     font-weight: bold;
-    color: white;
+    color: black;
+    padding-left: .5em;
 }
 
 .bookmarkUrl {
-    color: white;
+    color: black;
 }
 
 .bookmarkCategory {
-    color: white;
+    color: dodgerblue;
 }
 
 .bookmarkCommandPanel {
@@ -58,11 +59,19 @@
 }
 
 .createBookmarkIcon{
-    height:4em;
-    width: 4em;
+    height:64px;
+    width: 64px;
     display: flex;
     justify-content: flex-start;
     align-items: flex-start;
     margin-left: 0;
     padding-left: 0;
+}
+
+.bookmarkHeader{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width:fit-content;
 }
