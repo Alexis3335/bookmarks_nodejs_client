@@ -152,6 +152,7 @@ async function renderDeleteBookmarkForm(id) {
         $('#deleteBookmark').on("click", async function () {
             showWaitingGif();
             let result = await Bookmarks_API.Delete(bookmark.Id);
+            selectedCategory = null
             if (result)
                 renderBookmarks();
             else
@@ -177,12 +178,15 @@ function renderBookmarkForm(bookmark = null) {
     $("#abort").show();
     eraseContent();
     let create = bookmark == null;
+    let faviconUrl = "bookmark-logo.svg";
     if (create) bookmark = newBookmark();
+    else  faviconUrl = `https://www.google.com/s2/favicons?domain=${bookmark.Url}&sz=64`
+
     $("#actionTitle").text(create ? "Création" : "Modification");
     $("#content").append(`
         <form class="form" id="bookmarkForm">
             <input type="hidden" name="Id" value="${bookmark.Id}"/>
-            <img id="bookmarkIcon" src="bookmark-logo.svg" class="createBookmarkIcon" alt="Icône du favoris">
+            <img id="bookmarkIcon" src="${faviconUrl}" class="createBookmarkIcon" alt="Icône du favoris">
             <label for="Title" class="form-label">Titre </label>
             <input 
                 class="form-control Alpha"
@@ -283,7 +287,7 @@ function renderDropDownMenu(categories){
     <div class="dropdown-divider"></div>`)
 
     categories.forEach(category => {
-        $(".dropdown-menu").append(`<div class="dropdown-item dropdown-category" id="${category}">
+        $(".dropdown-menu").append(`<div class="dropdown-item dropdown-category" id="${category.replace(' ','_')}">
         ${category == selectedCategory ? '<i class="fa fa-check" style="color:rgb(0, 87, 204);"></i> ' + category : category} 
     </div>`)
     });
